@@ -1,0 +1,104 @@
+package com.marvin.campustrade.exception;
+
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<String> handleEmailExists(EmailAlreadyExistsException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(UniversityNotFoundException.class)
+    public ResponseEntity<String> handleUniversityNotFound(UniversityNotFoundException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidStudentEmailDomainException.class)
+    public ResponseEntity<String> handleInvalidStudentEmailDomain(InvalidStudentEmailDomainException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleValidationErrors(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .findFirst()
+                .orElse("Validation error");
+
+        return ResponseEntity.badRequest().body(message);
+    }
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<String> handleDeserializationErrors(HttpMessageNotReadableException ex) {
+
+        Throwable root = ex.getRootCause();
+
+        if (root instanceof InvalidFormatException invalid) {
+            RuntimeException custom = DeserializationErrorResolver.resolve(invalid);
+            return ResponseEntity.badRequest().body(custom.getMessage());
+        }
+
+        return ResponseEntity.badRequest().body("Malformed request body.");
+    }
+
+    @ExceptionHandler(InvalidEnumValueException.class)
+    public ResponseEntity<String> handleInvalidEnum(InvalidEnumValueException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidNumberFormatException.class)
+    public ResponseEntity<String> handleInvalidNumber(InvalidNumberFormatException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidRequestFieldException.class)
+    public ResponseEntity<String> handleInvalidField(InvalidRequestFieldException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<String> handleNotFound(ProductNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedActionException.class)
+    public ResponseEntity<String> handleUnauthorized(UnauthorizedActionException ex) {
+        return ResponseEntity.status(403).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<String> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(AuthenticationLoginException.class)
+    public ResponseEntity<String> handleAuth(AuthenticationLoginException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(NoActiveSessionException.class)
+    public ResponseEntity<String> handleNoActiveSession(NoActiveSessionException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ex.getMessage());
+    }
+    @ExceptionHandler(BlockedByException.class)
+    public ResponseEntity<String> handleBlocked(BlockedByException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ex.getMessage());
+    }
+}
